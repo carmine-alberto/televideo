@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Televideo</title>
+    <title>Televideo LG Hybrid Engine</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body, html {
@@ -37,22 +37,34 @@
             -ms-interpolation-mode: nearest-neighbor; 
         }
 
-        /* TASTIERINO A DUE COLONNE, A FILO SX E CENTRATO IN ALTEZZA */
+        /* STRUTTURA BASE DEL TASTIERINO (DI DEFAULT A 2 COLONNE) */
         .numpad-container {
             position: absolute;
-            left: 2px; /* A filo con il bordo sinistro */
-            top: 50%; /* Sposta il tastierino a metà altezza */
-            transform: translateY(-50%); /* Lo centra matematicamente sull'asse verticale */
+            left: 2px;
+            top: 50%;
+            transform: translateY(-50%);
             background: rgba(15, 15, 15, 0.95);
             border: 2px solid #ffffff;
             padding: 8px;
             border-radius: 8px;
             z-index: 100;
             display: grid;
-            grid-template-columns: repeat(2, 45px); /* MODIFICATO: Esattamente due colonne */
+            grid-template-columns: repeat(2, 45px); /* Parte a 2 colonne */
             grid-gap: 6px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            opacity: 0.15;
+            transition: opacity 0.25s ease-in-out, width 0.2s ease;
         }
+        
+        .numpad-container:hover {
+            opacity: 1;
+        }
+
+        /* CLASSE DINAMICA AGGIUNTA DA JS PER IL PASSAGGIO A 3 COLONNE */
+        .numpad-container.columns-3 {
+            grid-template-columns: repeat(3, 45px);
+        }
+
         .numpad-btn {
             height: 40px;
             background: #222222;
@@ -72,22 +84,52 @@
             background: #ff0000;
             border-color: #ffffff;
         }
-        /* Display interno al tastierino (si estende su due colonne) */
-        .numpad-display {
-            grid-column: span 2; /* Copre interamente le due colonne */
+
+        /* DISPLAY DEL TASTIERINO */
+        .numpad-display-wrapper {
+            grid-column: span 2; /* Di default copre 2 colonne */
+            display: flex;
             background: #000000;
             border: 1px solid #ff0000;
-            color: #ff0000;
+            border-radius: 4px;
             height: 35px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 6px;
+        }
+        
+        /* Quando passa a 3 colonne, il display si allarga di conseguenza */
+        .numpad-container.columns-3 .numpad-display-wrapper {
+            grid-column: span 3;
+        }
+
+        .numpad-display {
+            color: #ff0000;
+            font-size: 18px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            flex-grow: 1;
+            text-align: center;
+            padding-left: 15px; /* Centra meglio il testo compensando il tasto opzioni */
+        }
+
+        /* TASTO SWITCH LAYOUT (INGRANAGGIO) */
+        .btn-toggle-layout {
+            background: transparent;
+            border: none;
+            color: #555555;
+            font-size: 14px;
+            cursor: pointer;
+            outline: none;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
-            font-weight: bold;
-            border-radius: 4px;
-            letter-spacing: 1px;
+            transition: color 0.2s;
         }
-        /* Tasti Speciali affiancati */
+        .btn-toggle-layout:hover {
+            color: #ffff00;
+        }
+
         .btn-go { background: #008800; border-color: #00ff00; }
         .btn-go:hover { background: #00ff00; color: #000; }
         .btn-clr { background: #880000; border-color: #ff0000; }
@@ -96,22 +138,21 @@
 <body>
 
     <div class="tv-wrapper">
-        <!-- TASTIERINO A 2 COLONNE -->
-        <div class="numpad-container">
-            <div id="num-display" class="numpad-display">P100</div>
+        <!-- TASTIERINO IBRIDO 2/3 COLONNE -->
+        <div id="numpad" class="numpad-container">
+            <div class="numpad-display-wrapper">
+                <div id="num-display" class="numpad-display">P100</div>
+                <button class="btn-toggle-layout" onclick="toggleLayout()" title="Cambia Layout">⚙️</button>
+            </div>
             
             <div class="numpad-btn" onclick="pressNum('1')">1</div>
             <div class="numpad-btn" onclick="pressNum('2')">2</div>
-            
             <div class="numpad-btn" onclick="pressNum('3')">3</div>
             <div class="numpad-btn" onclick="pressNum('4')">4</div>
-            
             <div class="numpad-btn" onclick="pressNum('5')">5</div>
             <div class="numpad-btn" onclick="pressNum('6')">6</div>
-            
             <div class="numpad-btn" onclick="pressNum('7')">7</div>
             <div class="numpad-btn" onclick="pressNum('8')">8</div>
-            
             <div class="numpad-btn" onclick="pressNum('9')">9</div>
             <div class="numpad-btn" onclick="pressNum('0')">0</div>
             
@@ -133,6 +174,12 @@
 
     const imgElement = document.getElementById('televideo');
     const numDisplay = document.getElementById('num-display');
+    const numpadContainer = document.getElementById('numpad');
+
+    // Funzione magica per cambiare al volo le colonne del CSS
+    function toggleLayout() {
+        numpadContainer.classList.toggle('columns-3');
+    }
 
     imgElement.onerror = function() {
         if (currentSubpage > 1) {
@@ -182,7 +229,7 @@
         const cacheBuster = isAutoRefresh ? `?t=${new Date().getTime()}` : '';
         let subString = (currentSubpage !== 1) ? ("." + currentSubpage) : "";
         
- 	imgElement.src = `https://www.televideo.rai.it/televideo/pub/tt4web/Nazionale/16_9_page-${currentPage}${subString}.png${cacheBuster}`;
+        imgElement.src = `https://www.televideo.rai.it/televideo/pub/tt4web/Nazionale/16_9_page-${currentPage}${subString}.png${cacheBuster}`;
         
         avviaAutoRefresh();
     }
@@ -210,4 +257,3 @@
 </script>
 </body>
 </html>
-
