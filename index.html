@@ -133,23 +133,23 @@
 
         .btn-clr { background: #880000; border-color: #ff0000; }
 
-	    /* BLOCCO FRECCE TOUCH DINAMICHE */
-	    .touch-arrows-row {
-	        grid-column: span 2;
+	/* BLOCCO FRECCE TOUCH DINAMICHE */
+	.touch-arrows-row {
+	    grid-column: span 2;
     	    display: grid;
     	    grid-template-columns: repeat(4, 1fr);
     	    grid-gap: calc(4px * var(--scala));
     	    margin-top: calc(4px * var(--scala));
-	    }
-	    .numpad-container.columns-3 .touch-arrows-row {
+	}
+	.numpad-container.columns-3 .touch-arrows-row {
     	    grid-column: span 3;
-	    }
-	    .btn-nav-touch {
+	}
+	.btn-nav-touch {
     	    height: calc(35px * var(--scala));
     	    background: #333333;
     	    border-color: #666666;
     	    font-size: calc(14px * var(--scala));
-	    }
+	}
     </style>
 </head>
 <body>
@@ -199,15 +199,17 @@
 
     // La funzione isolata che rileva il touch e inietta i bottoni
     function checkTouchSupport() {
+	const isLgTV = /WebOS|SmartTV|LG/i.test(navigator.userAgent);
+
     	const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-    	if (isTouch) {
+    	if (isTouch && !isLgTV) {
         	const touchRow = document.getElementById('touch-navigation');
         	touchRow.innerHTML = `
             	<button class="numpad-btn btn-nav-touch" onclick="updatePage(currentPage - 1, 1)">▼</button>
             	<button class="numpad-btn btn-nav-touch" onclick="updatePage(currentPage + 1, 1)">▲</button>
             	<button class="numpad-btn btn-nav-touch" onclick="if(currentSubpage > 1) updatePage(currentPage, currentSubpage - 1)">◀</button>
             	<button class="numpad-btn btn-nav-touch" onclick="updatePage(currentPage, currentSubpage + 1)">▶</button>
-            `;
+        `;
     	}
     }
 
@@ -289,3 +291,6 @@
 </script>
 </body>
 </html>
+
+<!-- Sito RAI OG: https://www.televideo.rai.it/televideo/pub/pagina.jsp?p=206&s=2&r=Nazionale
+C'è pure la versione solotesto -->
