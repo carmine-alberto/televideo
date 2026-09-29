@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Televideo LG Pointer Engine</title>
+    <title>Televideo</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body, html {
@@ -37,27 +37,28 @@
             -ms-interpolation-mode: nearest-neighbor; 
         }
 
-        /* TASTIERINO RIMPICCIOLITO E A FILO BORDO SINISTRO */
+        /* TASTIERINO A DUE COLONNE, A FILO SX E CENTRATO IN ALTEZZA */
         .numpad-container {
             position: absolute;
             left: 2px; /* A filo con il bordo sinistro */
-            bottom: 30px;
+            top: 50%; /* Sposta il tastierino a metà altezza */
+            transform: translateY(-50%); /* Lo centra matematicamente sull'asse verticale */
             background: rgba(15, 15, 15, 0.95);
             border: 2px solid #ffffff;
             padding: 8px;
             border-radius: 8px;
             z-index: 100;
             display: grid;
-            grid-template-columns: repeat(3, 45px); /* Pulsanti più piccoli */
+            grid-template-columns: repeat(2, 45px); /* MODIFICATO: Esattamente due colonne */
             grid-gap: 6px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.7);
         }
         .numpad-btn {
-            height: 40px; /* Ridotto l'altezza */
+            height: 40px;
             background: #222222;
             border: 1px solid #555555;
             color: #ffffff;
-            font-size: 18px; /* Font leggermente più piccolo per proporzione */
+            font-size: 18px;
             font-weight: bold;
             font-family: monospace;
             border-radius: 4px;
@@ -71,9 +72,9 @@
             background: #ff0000;
             border-color: #ffffff;
         }
-        /* Display interno al tastierino */
+        /* Display interno al tastierino (si estende su due colonne) */
         .numpad-display {
-            grid-column: span 3;
+            grid-column: span 2; /* Copre interamente le due colonne */
             background: #000000;
             border: 1px solid #ff0000;
             color: #ff0000;
@@ -86,7 +87,7 @@
             border-radius: 4px;
             letter-spacing: 1px;
         }
-        /* Tasti Speciali */
+        /* Tasti Speciali affiancati */
         .btn-go { background: #008800; border-color: #00ff00; }
         .btn-go:hover { background: #00ff00; color: #000; }
         .btn-clr { background: #880000; border-color: #ff0000; }
@@ -95,24 +96,26 @@
 <body>
 
     <div class="tv-wrapper">
-        <!-- TASTIERINO MINIMALE -->
+        <!-- TASTIERINO A 2 COLONNE -->
         <div class="numpad-container">
             <div id="num-display" class="numpad-display">P100</div>
             
             <div class="numpad-btn" onclick="pressNum('1')">1</div>
             <div class="numpad-btn" onclick="pressNum('2')">2</div>
-            <div class="numpad-btn" onclick="pressNum('3')">3</div>
             
+            <div class="numpad-btn" onclick="pressNum('3')">3</div>
             <div class="numpad-btn" onclick="pressNum('4')">4</div>
+            
             <div class="numpad-btn" onclick="pressNum('5')">5</div>
             <div class="numpad-btn" onclick="pressNum('6')">6</div>
             
             <div class="numpad-btn" onclick="pressNum('7')">7</div>
             <div class="numpad-btn" onclick="pressNum('8')">8</div>
+            
             <div class="numpad-btn" onclick="pressNum('9')">9</div>
+            <div class="numpad-btn" onclick="pressNum('0')">0</div>
             
             <div class="numpad-btn btn-clr" onclick="pressClear()">C</div>
-            <div class="numpad-btn" onclick="pressNum('0')">0</div>
             <div class="numpad-btn btn-go" onclick="pressGo()">VAI</div>
         </div>
 
@@ -179,8 +182,7 @@
         const cacheBuster = isAutoRefresh ? `?t=${new Date().getTime()}` : '';
         let subString = (currentSubpage !== 1) ? ("." + currentSubpage) : "";
         
-        imgElement.src = `https://www.televideo.rai.it/televideo/pub/tt4web/Nazionale/16_9_page-${currentPage}${subString}.png${cacheBuster}`;
-
+ 	imgElement.src = `https://www.televideo.rai.it/televideo/pub/tt4web/Nazionale/16_9_page-${currentPage}${subString}.png${cacheBuster}`;
         
         avviaAutoRefresh();
     }
