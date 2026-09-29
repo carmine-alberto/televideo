@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Televideo Custom 16:9 - LG Engine</title>
+    <title>Televideo</title>
     <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
@@ -26,6 +26,7 @@
         justify-content: center;
         align-items: center;
         background-color: #000;
+		outline: none; /* Rimuove il bordo blu di focus sulla TV */
     }
 
     .televideo-img {
@@ -40,8 +41,10 @@
         transform: translate3d(0, 0, 0); 
         
         /* I tuoi filtri magici per mantenere i pixel taglienti e non sfocati */
-        image-rendering: crisp-edges;
-	image-rendering: pixelated;
+        image-rendering: -webkit-optimize-contrast;
+		image-rendering: crisp-edges;
+		image-rendering: pixelated;
+		-ms-interpolation-mode: nearest-neighbor;
     }
 
     .buffer-display {
@@ -62,7 +65,7 @@
 </head>
 <body>
 
-    <div class="tv-wrapper">
+   <div id="main-content" class="tv-wrapper" tabindex="0">
         <div id="buffer" class="buffer-display"></div>
         <img id="televideo" class="televideo-img" src="" alt="Sintonizzazione...">
     </div>
@@ -80,6 +83,12 @@
 
     const imgElement = document.getElementById('televideo');
     const bufferElement = document.getElementById('buffer');
+	const wrapperElement = document.getElementById('main-content');
+
+    // Forza il focus automatico all'apertura sulla TV
+    window.onload = function() {
+        wrapperElement.focus();
+    };
 
     // GESTORE DEGLI ERRORI DI CARICAMENTO (Intercetta i 404 della Rai)
     imgElement.onerror = function() {
