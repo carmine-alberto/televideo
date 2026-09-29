@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Televideo Custom 16:9 - LG Engine</title>
+    <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body, html {
+        background-color: #000000;
+        overflow: hidden;
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .tv-wrapper {
+        position: relative;
+        /* Definiamo una dimensione fissa virtuale per bloccare le proporzioni del Televideo */
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #000;
+    }
+
+    .televideo-img {
+        /* TRUCCO DELLO ZOOM FORZATO: Agganciamo l'immagine alle dimensioni della finestra */
+        width: 100vw !important;
+        height: 100vh !important;
+        
+        /* Forza lo stiramento totale ignorando i limiti hardware del browser LG */
+        object-fit: contain; 
+        
+        /* Spinge la TV a usare l'accelerazione della scheda video per ingrandire l'immagine */
+        transform: translate3d(0, 0, 0); 
+        
+        /* I tuoi filtri magici per mantenere i pixel taglienti e non sfocati */
+        image-rendering: crisp-edges;
+	image-rendering: pixelated;
+    }
+
+    .buffer-display {
+        position: absolute;
+        top: 40px;
+        left: 40px;
+        background: rgba(255, 0, 0, 0.9);
+        color: white;
+        padding: 10px 20px;
+        font-family: monospace;
+        font-size: 32px;
+        font-weight: bold;
+        border-radius: 4px;
+        display: none;
+        z-index: 10;
+    }
+</style>
+</head>
+<body>
+
+    <div class="tv-wrapper">
+        <div id="buffer" class="buffer-display"></div>
+        <img id="televideo" class="televideo-img" src="" alt="Sintonizzazione...">
+    </div>
+
+<script>
+    let currentPage = 100;
+    let currentSubpage = 1;
+    let inputBuffer = "";
+    let bufferTimeout;
+    let refreshInterval;
+
+    // Variabili di backup per ripristinare lo stato se la pagina intera non esiste
+    let previousPage = 100;
+    let previousSubpage = 1;
+
+    const imgElement = document.getElementById('televideo');
+    const bufferElement = document.getElementById('buffer');
+
+    // GESTORE DEGLI ERRORI DI CARICAMENTO (Intercetta i 404 della Rai)
+    imgElement.onerror = function() {
+        console.log(`Errore nel caricamento di: ${currentPage}.${currentSubpage}`);
+        
+        if (currentSubpage > 1) {
+            // APPROCCIO CIRCOLARE: Se stavamo navigando tra le sottopagine (es. .11) e fallisce,
+            // torniamo automaticamente alla sottopagina .1 creando un loop continuo
+            console.log("Out of bound delle sottopagine. Torno in loop alla .1");
+            currentSubpage = 1;
+            updatePage(currentPage, 1, false, true); 
+        } else {
+            // FALLBACK TOTALE: Se fallisce anche la .1 (la pagina intera inserita non esiste)
+            // ritorniamo all'ultima pagina valida che l'utente stava guardando prima
+            console.log(`Pagina ${currentPage} inesistente. Ripristino l'ultima valida: ${previousPage}.${previousSubpage}`);
+            currentPage = previousPage;
+            currentSubpage = previousSubpage;
+            updatePage(currentPage, currentSubpage, false, true);
+        }
+    };
+
+    // Funzione principale che aggiorna l'attributo src e gestisce lo stato
+    function updatePage(page, sub = 1, isAutoRefresh = false, isErrorFallback = false) {
+        // Se NON è un tentativo di ripristino da errore e NON è un refresh automatico, salviamo lo stato attuale come backup
+        if (!isErrorFallback && !isAutoRefresh) {
+            previousPage = currentPage;
+            previousSubpage = currentSubpage;
+        }
+
+        currentPage = parseInt(page);
+        currentSubpage = parseInt(sub);
+        
+        // Se cambiamo pagina principale resettiamo di default la sottopagina a 1
+        if (!isAutoRefresh && !isErrorFallback && sub === 1) {
+            currentSubpage = 1;
+        }
+
+        // Cache busting (?t=...) per forzare il browser a scaricare l'immagine aggiornata in background
+        const cacheBuster = isAutoRefresh ? `?t=${new Date().getTime()}` : '';
+        
+        // Generazione stringa URL dinamica con i parametri puliti in 16:9
+        imgElement.src = `https://www.televideo.rai.it/televideo/pub/tt4web/Nazionale/16_9_page-${currentPage}${(currentSubpage != 1) ? ("." + currentSubpage) : ""}.png${cacheBuster}`;
+        
+        // Reset e ripartenza del timer di refresh automatico a ogni interazione
+        avviaAutoRefresh();
+    }
+
+    // Sistema di auto-rinfresco automatico ogni 30 secondi
+    function avviaAutoRefresh() {
+        clearInterval(refreshInterval);
+        refreshInterval = setInterval(() => {
+            console.log(`Auto-refresh della pagina corrente: ${currentPage}.${currentSubpage}`);
+            updatePage(currentPage, currentSubpage, true);
+        }, 30000);
+    }
+
+    // Boot iniziale sulla pagina 100
+    updatePage(currentPage, 1);
+
+    // Mappatura degli eventi tastiera (PC e Telecomando Magico LG WebOS)
+    window.addEventListener('keydown', function(event) {
+
+	if ((event.key >= '0' && event.key <= '9') || 
+            ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ChannelUp', 'ChannelDown'].includes(event.key)) {
+            event.preventDefault(); 
+        }
+        
+        // Input numerico diretto (0-9)
+        if (event.key >= '0' && event.key <= '9') {
+            clearTimeout(bufferTimeout);
+            inputBuffer += event.key;
+            
+            bufferElement.innerText = "PAG: " + inputBuffer;
+            bufferElement.style.display = "block";
+
+            // Al raggiungimento delle 3 cifre, distrugge le sottopagine precedenti e carica la nuova pagina
+            if (inputBuffer.length === 3) {
+                updatePage(inputBuffer, 1);
+                inputBuffer = "";
+                bufferElement.style.display = "none";
+            } else {
+                // Cancella la digitazione parziale se ti fermi per 3 secondi
+                bufferTimeout = setTimeout(() => {
+                    inputBuffer = "";
+                    bufferElement.style.display = "none";
+                }, 3000);
+            }
+        }
+
+        // Gestione dei menu di navigazione tramite tasti e telecomando LG
+        switch(event.key) {
+            // Tasti colorati nativi LG e mappatura lettere per PC
+            case 'Red': case 'r': 
+                updatePage(101, 1); break; // Rosso -> Ultim'ora
+            case 'Green': case 'g': 
+                updatePage(100, 1); break; // Verde -> Indice
+            case 'Yellow': case 'y': 
+                updatePage(200, 1); break; // Giallo -> Sport
+            case 'Blue': case 'b': 
+                updatePage(400, 1); break; // Blu -> Meteo
+            
+            // Scorrimento pagine principali
+            case 'ChannelUp': case 'ArrowUp': 
+                updatePage(currentPage + 1, 1); break;
+            case 'ChannelDown': case 'ArrowDown': 
+                if(currentPage > 100) updatePage(currentPage - 1, 1); break;
+            
+            // Scorrimento sottopagine dinamico
+            case 'ArrowRight': 
+                updatePage(currentPage, currentSubpage + 1); break; // Aumenta sottopagina (.1 -> .2 -> .3)
+            case 'ArrowLeft': 
+                if(currentSubpage > 1) {
+                    updatePage(currentPage, currentSubpage - 1); // Diminuisce sottopagina fermandosi a .1
+                } break;
+        }
+    });
+</script>
+</body>
+</html>
