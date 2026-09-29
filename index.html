@@ -10,7 +10,7 @@
            1.0 = Base | 1.1 = +10% | 1.2 = +20% | 0.9 = -10%
            ======================================================== */
         :root {
-            --scala: 1.2; 
+            --scala: 1.3; 
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -132,6 +132,24 @@
         }
 
         .btn-clr { background: #880000; border-color: #ff0000; }
+
+	    /* BLOCCO FRECCE TOUCH DINAMICHE */
+	    .touch-arrows-row {
+	        grid-column: span 2;
+    	    display: grid;
+    	    grid-template-columns: repeat(4, 1fr);
+    	    grid-gap: calc(4px * var(--scala));
+    	    margin-top: calc(4px * var(--scala));
+	    }
+	    .numpad-container.columns-3 .touch-arrows-row {
+    	    grid-column: span 3;
+	    }
+	    .btn-nav-touch {
+    	    height: calc(35px * var(--scala));
+    	    background: #333333;
+    	    border-color: #666666;
+    	    font-size: calc(14px * var(--scala));
+	    }
     </style>
 </head>
 <body>
@@ -156,6 +174,7 @@
             <div class="numpad-btn btn-clr" onclick="pressClear()">C</div>
             <!-- L'ingranaggio ha preso il posto del tasto VAI -->
             <div class="numpad-btn btn-toggle-layout" onclick="toggleLayout()">⚙️</div>
+	    <div id="touch-navigation" class="touch-arrows-row"></div>
         </div>
 
         <img id="televideo" class="televideo-img" src="" alt="Sintonizzazione...">
@@ -177,6 +196,21 @@
     function toggleLayout() {
         numpadContainer.classList.toggle('columns-3');
     }
+
+    // La funzione isolata che rileva il touch e inietta i bottoni
+    function checkTouchSupport() {
+    	const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    	if (isTouch) {
+        	const touchRow = document.getElementById('touch-navigation');
+        	touchRow.innerHTML = `
+            	<button class="numpad-btn btn-nav-touch" onclick="updatePage(currentPage - 1, 1)">▼</button>
+            	<button class="numpad-btn btn-nav-touch" onclick="updatePage(currentPage + 1, 1)">▲</button>
+            	<button class="numpad-btn btn-nav-touch" onclick="if(currentSubpage > 1) updatePage(currentPage, currentSubpage - 1)">◀</button>
+            	<button class="numpad-btn btn-nav-touch" onclick="updatePage(currentPage, currentSubpage + 1)">▶</button>
+            `;
+    	}
+    }
+
 
     imgElement.onerror = function() {
         if (currentSubpage > 1) {
@@ -251,6 +285,7 @@
             case 'ArrowLeft': if(currentSubpage > 1) updatePage(currentPage, currentSubpage - 1); break;
         }
     });
+    checkTouchSupport();
 </script>
 </body>
 </html>
