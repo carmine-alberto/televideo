@@ -140,7 +140,7 @@
     updatePage(currentPage, 1);
 
     // Mappatura degli eventi tastiera (PC e Telecomando Magico LG WebOS)
-    window.addEventListener('keydown', function(event) {
+    document.addEventListener('keydown', function(event) {
 
 	if ((event.key >= '0' && event.key <= '9') || 
             ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ChannelUp', 'ChannelDown'].includes(event.key)) {
