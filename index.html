@@ -6,11 +6,12 @@
     <title>Televideo</title>
     <style>
         /* ========================================================
-           TI BASTA CAMBIARE QUESTO VALORE PER SCALARE TUTTO IL TASTIERINO!
-           1.0 = Base | 1.1 = +10% | 1.2 = +20% | 0.9 = -10%
+           CONTROLLI GLOBALI
            ======================================================== */
         :root {
-            --scala: 1.3; 
+            --scala: 1.3;          /* Dimensione generale aumentata del 30% */
+            --colonne: 3;          /* Default iniziale a 3 colonne */
+            --opacita-riposo: 0.1; /* Quasi totalmente invisibile a riposo */
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -45,7 +46,7 @@
             -ms-interpolation-mode: nearest-neighbor; 
         }
 
-        /* STRUTTURA DEL TASTIERINO DINAMICA */
+        /* GRIGLIA TASTIERINO FISSA */
         .numpad-container {
             position: absolute;
             left: 2px;
@@ -57,22 +58,39 @@
             border-radius: calc(8px * var(--scala));
             z-index: 100;
             display: grid;
-            grid-template-columns: repeat(2, calc(45px * var(--scala))); /* 2 colonne scalabili */
+            grid-template-columns: repeat(var(--colonne), calc(45px * var(--scala))); 
             grid-gap: calc(6px * var(--scala));
             box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-            opacity: 0.10;
-            transition: opacity 0.25s ease-in-out, width 0.2s ease;
+            opacity: var(--opacita-riposo);
+            transition: opacity 0.25s ease-in-out, grid-template-columns 0.15s ease;
         }
         
         .numpad-container:hover {
             opacity: 1;
         }
 
-        /* PASSAGGIO DINAMICO A 3 COLONNE SCALABILI */
-        .numpad-container.columns-3 {
-            grid-template-columns: repeat(3, calc(45px * var(--scala)));
+        /* DISPLAY INTERNO */
+        .numpad-display-wrapper {
+            grid-column: span var(--colonne);
+            display: flex;
+            background: #000000;
+            border: 1px solid #ff0000;
+            border-radius: calc(4px * var(--scala));
+            height: calc(35px * var(--scala));
+            align-items: center;
+            justify-content: center;
+            padding: 0 calc(6px * var(--scala));
         }
 
+        .numpad-display {
+            color: #ff0000;
+            font-size: calc(18px * var(--scala));
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        /* BOTTONI NUMERICI */
         .numpad-btn {
             height: calc(40px * var(--scala));
             background: #222222;
@@ -93,32 +111,6 @@
             border-color: #ffffff;
         }
 
-        /* DISPLAY DEL TASTIERINO SCALABILE */
-        .numpad-display-wrapper {
-            grid-column: span 2;
-            display: flex;
-            background: #000000;
-            border: 1px solid #ff0000;
-            border-radius: calc(4px * var(--scala));
-            height: calc(35px * var(--scala));
-            align-items: center;
-            justify-content: center;
-            padding: 0 calc(6px * var(--scala));
-        }
-        
-        .numpad-container.columns-3 .numpad-display-wrapper {
-            grid-column: span 3;
-        }
-
-        .numpad-display {
-            color: #ff0000;
-            font-size: calc(18px * var(--scala));
-            font-weight: bold;
-            letter-spacing: 1px;
-            text-align: center;
-        }
-
-        /* TASTO INGRANAGGIO DI COLORE GIALLO AL PASSO DEL CURSORE */
         .btn-toggle-layout {
             background: #222222;
             border: 1px solid #555555;
@@ -133,23 +125,20 @@
 
         .btn-clr { background: #880000; border-color: #ff0000; }
 
-	/* BLOCCO FRECCE TOUCH DINAMICHE */
-	.touch-arrows-row {
-	    grid-column: span 2;
-    	    display: grid;
-    	    grid-template-columns: repeat(4, 1fr);
-    	    grid-gap: calc(4px * var(--scala));
-    	    margin-top: calc(4px * var(--scala));
-	}
-	.numpad-container.columns-3 .touch-arrows-row {
-    	    grid-column: span 3;
-	}
-	.btn-nav-touch {
-    	    height: calc(35px * var(--scala));
-    	    background: #333333;
-    	    border-color: #666666;
-    	    font-size: calc(14px * var(--scala));
-	}
+        /* NAVIGAZIONE TOUCH COMPATIBILE */
+        .touch-arrows-row {
+            grid-column: span var(--colonne);
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-gap: calc(4px * var(--scala));
+            margin-top: calc(4px * var(--scala));
+        }
+        .btn-nav-touch {
+            height: calc(35px * var(--scala));
+            background: #333333;
+            border-color: #666666;
+            font-size: calc(14px * var(--scala));
+        }
     </style>
 </head>
 <body>
@@ -169,12 +158,13 @@
             <div class="numpad-btn" onclick="pressNum('7')">7</div>
             <div class="numpad-btn" onclick="pressNum('8')">8</div>
             <div class="numpad-btn" onclick="pressNum('9')">9</div>
-            <div class="numpad-btn" onclick="pressNum('0')">0</div>
             
+
+            <div class="numpad-btn btn-toggle-layout" onclick="toggleLayout()">⚙️</div>	    
+	    <div class="numpad-btn" onclick="pressNum('0')">0</div>
             <div class="numpad-btn btn-clr" onclick="pressClear()">C</div>
-            <!-- L'ingranaggio ha preso il posto del tasto VAI -->
-            <div class="numpad-btn btn-toggle-layout" onclick="toggleLayout()">⚙️</div>
-	    <div id="touch-navigation" class="touch-arrows-row"></div>
+
+            <div id="touch-navigation" class="touch-arrows-row"></div>
         </div>
 
         <img id="televideo" class="televideo-img" src="" alt="Sintonizzazione...">
@@ -194,25 +184,26 @@
     const numpadContainer = document.getElementById('numpad');
 
     function toggleLayout() {
-        numpadContainer.classList.toggle('columns-3');
+        const root = document.documentElement;
+        const currentCols = getComputedStyle(root).getPropertyValue('--colonne').trim();
+        root.style.setProperty('--colonne', currentCols === '3' ? '2' : '3');
+	root.style.setProperty('--scala', currentCols === '3' ? '1.1' : '1.3');
+
     }
 
-    // La funzione isolata che rileva il touch e inietta i bottoni
     function checkTouchSupport() {
-	const isLgTV = /WebOS|SmartTV|LG/i.test(navigator.userAgent);
-
-    	const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-    	if (isTouch && !isLgTV) {
-        	const touchRow = document.getElementById('touch-navigation');
-        	touchRow.innerHTML = `
-            	<button class="numpad-btn btn-nav-touch" onclick="updatePage(currentPage - 1, 1)">▼</button>
-            	<button class="numpad-btn btn-nav-touch" onclick="updatePage(currentPage + 1, 1)">▲</button>
-            	<button class="numpad-btn btn-nav-touch" onclick="if(currentSubpage > 1) updatePage(currentPage, currentSubpage - 1)">◀</button>
-            	<button class="numpad-btn btn-nav-touch" onclick="updatePage(currentPage, currentSubpage + 1)">▶</button>
-        `;
-    	}
+        const isLgTV = /WebOS|SmartTV|LG/i.test(navigator.userAgent);
+        const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        
+        if (isTouch && !isLgTV) {
+            document.getElementById('touch-navigation').innerHTML = `
+                <button class="numpad-btn btn-nav-touch" onclick="updatePage(currentPage - 1, 1)">▼</button>
+                <button class="numpad-btn btn-nav-touch" onclick="updatePage(currentPage + 1, 1)">▲</button>
+                <button class="numpad-btn btn-nav-touch" onclick="if(currentSubpage > 1) updatePage(currentPage, currentSubpage - 1)">◀</button>
+                <button class="numpad-btn btn-nav-touch" onclick="updatePage(currentPage, currentSubpage + 1)">▶</button>
+            `;
+        }
     }
-
 
     imgElement.onerror = function() {
         if (currentSubpage > 1) {
@@ -225,13 +216,11 @@
         }
     };
 
-    // MODIFICATO: Alla terza cifra parte in automatico!
     function pressNum(num) {
         if (typedBuffer.length >= 3) typedBuffer = ""; 
         typedBuffer += num;
         numDisplay.innerText = "P" + typedBuffer;
 
-        // Se l'utente inserisce la terza cifra, cambia pagina all'istante senza conferme
         if (typedBuffer.length === 3) {
             updatePage(typedBuffer, 1);
             typedBuffer = "";
@@ -275,6 +264,7 @@
     }
 
     updatePage(currentPage, 1);
+    checkTouchSupport();
 
     document.addEventListener('keydown', function(event) {
         const keysToBlock = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
@@ -287,10 +277,11 @@
             case 'ArrowLeft': if(currentSubpage > 1) updatePage(currentPage, currentSubpage - 1); break;
         }
     });
-    checkTouchSupport();
+
 </script>
 </body>
 </html>
 
 <!-- Sito RAI OG: https://www.televideo.rai.it/televideo/pub/pagina.jsp?p=206&s=2&r=Nazionale
-C'è pure la versione solotesto -->
+C'è pure la versione solotesto
+TODO - Dynamic Keypad resizing, since img w/h ratio is fixed and it can sometimes be enlarged-->
