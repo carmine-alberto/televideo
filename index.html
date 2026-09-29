@@ -3,8 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Televideo LG Hybrid Engine</title>
+    <title>Televideo</title>
     <style>
+        /* ========================================================
+           TI BASTA CAMBIARE QUESTO VALORE PER SCALARE TUTTO IL TASTIERINO!
+           1.0 = Base | 1.1 = +10% | 1.2 = +20% | 0.9 = -10%
+           ======================================================== */
+        :root {
+            --scala: 1.2; 
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body, html {
             background-color: #000000;
@@ -37,22 +45,22 @@
             -ms-interpolation-mode: nearest-neighbor; 
         }
 
-        /* STRUTTURA BASE DEL TASTIERINO (DI DEFAULT A 2 COLONNE) */
+        /* STRUTTURA DEL TASTIERINO DINAMICA */
         .numpad-container {
             position: absolute;
             left: 2px;
             top: 50%;
             transform: translateY(-50%);
             background: rgba(15, 15, 15, 0.95);
-            border: 2px solid #ffffff;
-            padding: 8px;
-            border-radius: 8px;
+            border: calc(2px * var(--scala)) solid #ffffff;
+            padding: calc(8px * var(--scala));
+            border-radius: calc(8px * var(--scala));
             z-index: 100;
             display: grid;
-            grid-template-columns: repeat(2, 45px); /* Parte a 2 colonne */
-            grid-gap: 6px;
+            grid-template-columns: repeat(2, calc(45px * var(--scala))); /* 2 colonne scalabili */
+            grid-gap: calc(6px * var(--scala));
             box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-            opacity: 0.15;
+            opacity: 0.10;
             transition: opacity 0.25s ease-in-out, width 0.2s ease;
         }
         
@@ -60,20 +68,20 @@
             opacity: 1;
         }
 
-        /* CLASSE DINAMICA AGGIUNTA DA JS PER IL PASSAGGIO A 3 COLONNE */
+        /* PASSAGGIO DINAMICO A 3 COLONNE SCALABILI */
         .numpad-container.columns-3 {
-            grid-template-columns: repeat(3, 45px);
+            grid-template-columns: repeat(3, calc(45px * var(--scala)));
         }
 
         .numpad-btn {
-            height: 40px;
+            height: calc(40px * var(--scala));
             background: #222222;
             border: 1px solid #555555;
             color: #ffffff;
-            font-size: 18px;
+            font-size: calc(18px * var(--scala));
             font-weight: bold;
             font-family: monospace;
-            border-radius: 4px;
+            border-radius: calc(4px * var(--scala));
             cursor: pointer;
             display: flex;
             justify-content: center;
@@ -85,64 +93,53 @@
             border-color: #ffffff;
         }
 
-        /* DISPLAY DEL TASTIERINO */
+        /* DISPLAY DEL TASTIERINO SCALABILE */
         .numpad-display-wrapper {
-            grid-column: span 2; /* Di default copre 2 colonne */
+            grid-column: span 2;
             display: flex;
             background: #000000;
             border: 1px solid #ff0000;
-            border-radius: 4px;
-            height: 35px;
+            border-radius: calc(4px * var(--scala));
+            height: calc(35px * var(--scala));
             align-items: center;
-            justify-content: space-between;
-            padding: 0 6px;
+            justify-content: center;
+            padding: 0 calc(6px * var(--scala));
         }
         
-        /* Quando passa a 3 colonne, il display si allarga di conseguenza */
         .numpad-container.columns-3 .numpad-display-wrapper {
             grid-column: span 3;
         }
 
         .numpad-display {
             color: #ff0000;
-            font-size: 18px;
+            font-size: calc(18px * var(--scala));
             font-weight: bold;
             letter-spacing: 1px;
-            flex-grow: 1;
             text-align: center;
-            padding-left: 15px; /* Centra meglio il testo compensando il tasto opzioni */
         }
 
-        /* TASTO SWITCH LAYOUT (INGRANAGGIO) */
+        /* TASTO INGRANAGGIO DI COLORE GIALLO AL PASSO DEL CURSORE */
         .btn-toggle-layout {
-            background: transparent;
-            border: none;
-            color: #555555;
-            font-size: 14px;
-            cursor: pointer;
-            outline: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: color 0.2s;
+            background: #222222;
+            border: 1px solid #555555;
+            color: #ffffff;
+            font-size: calc(14px * var(--scala));
         }
         .btn-toggle-layout:hover {
+            background: #222222;
             color: #ffff00;
+            border-color: #ffffff;
         }
 
-        .btn-go { background: #008800; border-color: #00ff00; }
-        .btn-go:hover { background: #00ff00; color: #000; }
         .btn-clr { background: #880000; border-color: #ff0000; }
     </style>
 </head>
 <body>
 
     <div class="tv-wrapper">
-        <!-- TASTIERINO IBRIDO 2/3 COLONNE -->
         <div id="numpad" class="numpad-container">
             <div class="numpad-display-wrapper">
                 <div id="num-display" class="numpad-display">P100</div>
-                <button class="btn-toggle-layout" onclick="toggleLayout()" title="Cambia Layout">⚙️</button>
             </div>
             
             <div class="numpad-btn" onclick="pressNum('1')">1</div>
@@ -157,7 +154,8 @@
             <div class="numpad-btn" onclick="pressNum('0')">0</div>
             
             <div class="numpad-btn btn-clr" onclick="pressClear()">C</div>
-            <div class="numpad-btn btn-go" onclick="pressGo()">VAI</div>
+            <!-- L'ingranaggio ha preso il posto del tasto VAI -->
+            <div class="numpad-btn btn-toggle-layout" onclick="toggleLayout()">⚙️</div>
         </div>
 
         <img id="televideo" class="televideo-img" src="" alt="Sintonizzazione...">
@@ -176,7 +174,6 @@
     const numDisplay = document.getElementById('num-display');
     const numpadContainer = document.getElementById('numpad');
 
-    // Funzione magica per cambiare al volo le colonne del CSS
     function toggleLayout() {
         numpadContainer.classList.toggle('columns-3');
     }
@@ -192,22 +189,22 @@
         }
     };
 
+    // MODIFICATO: Alla terza cifra parte in automatico!
     function pressNum(num) {
         if (typedBuffer.length >= 3) typedBuffer = ""; 
         typedBuffer += num;
         numDisplay.innerText = "P" + typedBuffer;
+
+        // Se l'utente inserisce la terza cifra, cambia pagina all'istante senza conferme
+        if (typedBuffer.length === 3) {
+            updatePage(typedBuffer, 1);
+            typedBuffer = "";
+        }
     }
 
     function pressClear() {
         typedBuffer = "";
         numDisplay.innerText = "P" + currentPage;
-    }
-
-    function pressGo() {
-        if (typedBuffer.length === 3) {
-            updatePage(typedBuffer, 1);
-            typedBuffer = "";
-        }
     }
 
     function updatePage(page, sub = 1, isAutoRefresh = false, isErrorFallback = false) {
