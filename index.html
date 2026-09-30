@@ -206,13 +206,18 @@
     }
 
     imgElement.onerror = function() {
+		//Non è chiarissimo che aveva in mente l'AI qui separando in false e true; del resto ha aggiunto sopra previous senza mai usarli, mi sono tornati utili quando ho deciso di aggiungere l'autoscroll a mano
+		let nextPage;
         if (currentSubpage > 1) {
             currentSubpage = 1;
             updatePage(currentPage, 1, false, true); 
         } else {
-            currentPage = previousPage;
-            currentSubpage = previousSubpage;
-            updatePage(currentPage, currentSubpage, false, true);
+	    if (previousPage == currentPage - 1) {
+            	nextPage = currentPage + 1;
+	    } else {
+		nextPage = currentPage - 1;
+	    }
+            updatePage(nextPage, currentSubpage, false, false);
         }
     };
 
@@ -244,16 +249,18 @@
         if (!isAutoRefresh && !isErrorFallback && sub === 1) {
             currentSubpage = 1;
         }
+	
+	if (currentPage > 99 && currentPage < 1000) {
+            let subText = (currentSubpage !== 1) ? ("." + currentSubpage) : "";
+            numDisplay.innerText = "P" + currentPage + subText;
 
-        let subText = (currentSubpage !== 1) ? ("." + currentSubpage) : "";
-        numDisplay.innerText = "P" + currentPage + subText;
-
-        const cacheBuster = isAutoRefresh ? `?t=${new Date().getTime()}` : '';
-        let subString = (currentSubpage !== 1) ? ("." + currentSubpage) : "";
+            const cacheBuster = isAutoRefresh ? `?t=${new Date().getTime()}` : '';
+            let subString = (currentSubpage !== 1) ? ("." + currentSubpage) : "";
         
-        imgElement.src = `https://www.televideo.rai.it/televideo/pub/tt4web/Nazionale/16_9_page-${currentPage}${subString}.png${cacheBuster}`;
+            imgElement.src = `https://www.televideo.rai.it/televideo/pub/tt4web/Nazionale/16_9_page-${currentPage}${subString}.png${cacheBuster}`;
         
-        avviaAutoRefresh();
+            avviaAutoRefresh();
+	}
     }
 
     function avviaAutoRefresh() {
@@ -283,5 +290,4 @@
 </html>
 
 <!-- Sito RAI OG: https://www.televideo.rai.it/televideo/pub/pagina.jsp?p=206&s=2&r=Nazionale
-C'è pure la versione solotesto
-TODO - Dynamic Keypad resizing, since img w/h ratio is fixed and it can sometimes be enlarged-->
+C'è pure la versione solotesto -->
