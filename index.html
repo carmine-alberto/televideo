@@ -212,11 +212,11 @@
             currentSubpage = 1;
             updatePage(currentPage, 1, false, true); 
         } else {
-	    if (previousPage == currentPage - 1) {
-            	nextPage = currentPage + 1;
-	    } else {
-		nextPage = currentPage - 1;
-	    }
+		    if (previousPage < currentPage) {
+				nextPage = currentPage + 1;
+		    } else {
+				nextPage = currentPage - 1;
+		    }
             updatePage(nextPage, currentSubpage, false, false);
         }
     };
